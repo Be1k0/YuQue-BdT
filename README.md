@@ -1,63 +1,67 @@
-# 语雀知识库导出工具
+# YuQue-BdT
 
-一款针对语雀知识库的批量导出工具，支持一键导出账号内所有知识库中的文档，也支持导出别人公开的知识库。
+![](https://socialify.git.ci/Be1k0/YuQue-BdT/image?custom_description=https%3A%2F%2Fgithub.com%2FBe1k0%2FYuQue-BdT&description=1&font=Inter&logo=https%3A%2F%2Fgithub.com%2FBe1k0%2FYuQue-BdT%2Fblob%2Fmain%2Fassets%2FYuQue-BdT-logo%3Fraw%3Dtrue&name=1&pattern=Signal&theme=Light)
+
+[![GitHub Release](https://img.shields.io/github/v/release/Be1k0/YuQue-BdT?logo=github&sort=semver&label=Latest%20Release)](https://github.com/Be1k0/YuQue-BdT/releases/latest) [![Total Downloads](https://img.shields.io/github/downloads/Be1k0/YuQue-BdT/total?logo=github&label=Downloads)](https://github.com/Be1k0/YuQue-BdT/releases) [![License](https://img.shields.io/github/license/Be1k0/YuQue-BdT?label=License)](LICENSE) [![GitHub Stars](https://img.shields.io/github/stars/Be1k0/YuQue-BdT?logo=github&style=flat&label=Stars)](https://github.com/Be1k0/YuQue-BdT/stargazers) [![Last Commit](https://img.shields.io/github/last-commit/Be1k0/YuQue-BdT?logo=github&label=Last%20Commit)](https://github.com/Be1k0/YuQue-BdT/commits/main) [![Python Version](https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Ubuntu-0078D4?logo=windows&logoColor=white)](https://github.com/Be1k0/YuQue-BdT#环境要求)
+
+## 简介
+
+YuQue-BdT 是一款针对语雀开发的知识库批量导出 GUI 工具，采用Python开发，支持一键导出个人账号下全部知识库文档，同时也可下载他人公开的语雀知识库。
+
+项目初衷源于作者自身有将语雀文档迁移导出至本地这方面的需求。由于官方未提供一键导出功能，而现有同类工具又大多以 CLI 终端操作为主又或者是年久失修，对于部分人来说其实不太友好，便利用空余时间开发了这款带有现代化GUI界面的版本
 
 ## 功能特点
 
-### 账号管理
+### 账号与知识库管理
 
-- 支持语雀账号密码登录、网页端登录两种方式
-- 自动持久化登录状态，无需重复登录
+- 支持账号密码登录、网页登录两种方式，自动持久化登录状态
+- 自动获取并展示个人所有知识库，支持批量选择导出
+- 支持导出指定文档层级，可导出他人公开知识库
+- 智能缓存知识库信息，提升加载速度
 
-### 知识库批量导出
+### 知识库批量导出与文档处理
 
-- 登录后自动获取用户所有知识库列表
-- 支持批量选择多个知识库同时导出
-- 支持知识库内导出指定层级中的文档
-- 支持导出别人公开的知识库
-- 智能缓存知识库信息
+| 类型         | 现已适配的导出格式 | 未来适配的导出格式           |
+| ------------ | ------------------ | ---------------------------- |
+| 文档         | Markdown           | PDF、Word、语雀文档？、JPG？ |
+| 画板         | PNG                | JPG？语雀画板？              |
+| 表格、数据表 | XLSX               | 语雀表格？                   |
 
-### 文档导出
-
-- 支持导出为 Markdown 格式
-- 支持保留或移除语雀特定的换行标识
-- 智能跳过已下载文件，支持增量更新
-- 保留语雀内原有的文档层级结构
+- 导出会完整保留语雀原有的层级结构
+- 支持保留或移除语雀特有换行标识
+- 智能跳过已下载文件，支持增量更新导出
 
 ### 图片处理
 
-- 自动下载文档中的所有图片
-- 自动处理语雀图片链接，确保本地可访问
-- 支持多线程并发下载
+- 自动下载文档中的所有图片，自动处理语雀图片链接，确保本地可访问
+- 支持图片多线程并发下载，导出更高效
 
 ### 用户界面
 
 - 现代化图形界面，操作直观简洁
-- 支持亮色 / 暗色 两种主题切换，也可以选择跟随系统主题
-- 实时展示导出进度、状态、日志信息
-- 支持自定义输出目录选择
+- 支持亮色、暗色主题及跟随系统主题切换
+- 实时显示导出进度、状态与运行日志
+- 支持自定义导出目录，内置版本检查与一键更新功能
 
 ## 界面预览
 
-![image-20260308154313423](assets/image-20260308154313423.png)
+![image-20260407214202152](assets/image-20260407214202152.png)
 
-![image-20260308155417657](assets/image-20260308155417657.png)
+![image-20260407214231899](assets/image-20260407214231899.png)
 
-![image-20260308154838456](assets/image-20260308154838456.png)
+![image-20260407214256714](assets/image-20260407214256714.png)
 
-![image-20260308154856664](assets/image-20260308154856664.png)
+![image-20260407214309639](assets/image-20260407214309639.png)
 
-![image-20260308155044270](assets/image-20260308155044270.png)
+![image-20260407214328777](assets/image-20260407214328777.png)
 
-![image-20260308155159617](assets/image-20260308155159617.png)
+![image-20260407214342867](assets/image-20260407214342867.png)
 
-![image-20260308155240292](assets/image-20260308155240292.png)
+![image-20260407214356748](assets/image-20260407214356748.png)
 
-![image-20260308155322156](assets/image-20260308155322156.png)
+![image-20260407214435666](assets/image-20260407214435666.png)
 
-![image-20260308155352197](assets/image-20260308155352197.png)
-
-
+![image-20260407214454515](assets/image-20260407214454515.png)
 
 ## 快速开始
 
@@ -72,7 +76,7 @@
 #### 方式一：直接使用（推荐）
 
 1. 下载最新版本的可执行文件
-2. 双击运行 `语雀知识库导出工具.exe`
+2. 双击运行 `YuQue-BdT.exe`
 3. 开始使用
 
 #### 方式二：源码运行
@@ -80,7 +84,7 @@
 1. 克隆或下载本仓库
 
 ```bash
-git clone https://github.com/Be1k0/yuque_document_download.git
+git clone https://github.com/Be1k0/YuQue-BdT.git
 cd yuque_document_download
 ```
 
@@ -96,7 +100,59 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 自行构建程序
+
+1. 克隆或下载本仓库
+
+```bash
+git clone https://github.com/Be1k0/YuQue-BdT.git
+cd yuque_document_download
+```
+
+2. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+3. 开始构建
+
+```bash
+python bulid.py
+```
+
+
+## 更新计划
+
+- [x] 增加适配其他非文档类型的导出功能，如图表、Excel等
+
+- [x] 增加其他公开知识库的导出功能
+
+- [x] 增加UI夜间主题
+
+- [ ] 增加支持更多的导出格式，如PDF、Word、JPG、语雀自带格式等
+
+- [ ] 增加导出文档里面的图片或视频等文件
+
+- [ ] 增加适配其他空间中的知识库导出
+
+  ...
+
 ## 更新日志
+
+### v2.2.0
+
+- 软件名字变更为：YuQue-BdT，并替换对应LOGO
+- 增加软件内一键更新版本的功能，且启动后自动检测软件当前是否为最新版本
+- 增加语雀画板、表格与数据表的导出功能
+- 修复部分弹窗显示不完整的问题
+- 修复网页登录时语雀验证码一直验证失败的问题
+- 修复公开知识库导出时重新混入本地登录 Cookie 导致的权限串扰问题
+- 修复多选知识库导出时误复用旧文章选择范围的问题
+- 修复多知识库导出场景下文档进度文案分子分母错位的问题
+- 修复公开知识库导出空 Markdown 文档时被误判为失败的问题
+
+---
 
 ### v2.1.0
 
@@ -164,20 +220,6 @@ python main.py
 - 多线程并发处理
 - 智能缓存机制
 
-## 更新计划
-
-- [ ] 增加支持更多的导出格式，如PDF、Word、JPG等
-
-- [ ] 增加适配其他非文档类型的导出功能，如图表、Excel等
-
-- [ ] 增加导出文档里面的图片或视频等文件
-
-- [x] 增加其他公开知识库的导出功能
-
-- [x] 增加UI夜间主题
-
-  ...
-
 ## 贡献指南
 
 欢迎提交 Issue 和 Pull Request 来帮助改进这个项目！
@@ -186,10 +228,16 @@ python main.py
 
 本项目采用 GPL 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-## 作者
+<div align="center">
 
-**Be1k0** - [GitHub](https://github.com/Be1k0)
+## 致谢
+
+**感谢每一位为本项目提交 Issue、反馈 Bug、提出优化建议的用户，你们的每一份反馈，都是项目持续迭代、稳定优化的核心动力。**
 
 ---
 
+![](https://api.star-history.com/svg?repos=be1k0%2Fyuque_document_download)
+
 如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！
+
+Copyright © 2025-2026 By [Be1k0](https://github.com/Be1k0)

@@ -1,4 +1,4 @@
-name: 跨平台构建版本
+name: 自动跨平台构建版本并发布版本
 run-name: 构建版本 ${{ github.ref_name }}
 
 on:
@@ -39,11 +39,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: 准备构建脚本
-        shell: bash
-        run: |
-          echo "${{ secrets.BUILD_SCRIPT_BASE64 }}" | base64 --decode > build.py
 
       - name: 构建可执行文件
         shell: bash
@@ -54,7 +49,7 @@ jobs:
             VERSION="dev"
           fi
           
-          python build.py --set-version $VERSION --build
+          python build.py --version $VERSION 
 
       - name: 上传构建文件
         uses: actions/upload-artifact@v4
@@ -71,16 +66,42 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: 检出代码（用于读取更新日志）
+        uses: actions/checkout@v4
+
       - name: 下载所有构建文件
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
-      - name: 创建发行版
+      - name: 获取当前日期
+        id: date
+        run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+
+      - name: 提取当前版本更新日志
+        id: extract_changelog
+        run: |
+          VERSION=${{ github.ref_name }}
+          # 尝试提取日志，如果没找到就给个默认提示
+          awk -v ver="$VERSION" '/^## / {if ($2 == ver) {flag=1; next}} /^---/ {flag=0} flag' CHANGELOG.md > RELEASE_NOTES.md
+          if [ -s RELEASE_NOTES.md ]; then
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "notes=（暂无更新日志，请在 CHANGELOG.md 中添加 $VERSION 版本记录）" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 创建发行版（带自定义更新日志）
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.exe
             dist/*.bin
-          generate_release_notes: true
+          body: |
+            ## ${{ github.ref_name }}
+            
+            >- ${{ steps.date.outputs.date }}
+            
+            ${{ steps.extract_changelog.outputs.notes }}

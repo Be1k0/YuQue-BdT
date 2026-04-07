@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 import os
 import asyncio
 from PyQt6.QtWidgets import (
@@ -186,14 +191,8 @@ class SettingsManagerMixin:
         self.disable_ssl_checkbox.stateChanged.connect(self.toggle_disable_ssl)
         debug_layout.addWidget(self.disable_ssl_checkbox)
 
-        self.enable_update_proxy_checkbox = QCheckBox("使用程序更新下载加速")
-        self.enable_update_proxy_checkbox.setToolTip("仅影响程序更新时的安装包下载，不影响版本检查接口")
-        self.enable_update_proxy_checkbox.setChecked(self.enable_update_proxy)
-        self.enable_update_proxy_checkbox.stateChanged.connect(self.toggle_update_proxy)
-        debug_layout.addWidget(self.enable_update_proxy_checkbox)
-
         update_proxy_layout = QHBoxLayout()
-        update_proxy_label = QLabel("更新加速地址:")
+        update_proxy_label = QLabel("软件更新加速地址:")
         update_proxy_label.setMinimumWidth(100)
         self.update_proxy_input = QLineEdit(self.update_proxy_base_url)
         self.update_proxy_input.setMaximumWidth(280)
@@ -302,7 +301,7 @@ class SettingsManagerMixin:
             ):
                 Log.info(
                     f"设置自动保存触发: 重命名模式={new_image_rename_mode}, 图片前缀={new_image_file_prefix}, "
-                    f"CDN={new_yuque_cdn_domain}, 更新加速地址={new_update_proxy_base_url or '直连'}"
+                    f"CDN={new_yuque_cdn_domain}, 软件更新加速地址={new_update_proxy_base_url or '直连'}"
                 )
 
             self.image_rename_mode = new_image_rename_mode
@@ -468,12 +467,6 @@ class SettingsManagerMixin:
                     self.disable_ssl_checkbox.setChecked(self.disable_ssl)
                     from src.libs.constants import GLOBAL_CONFIG
                     GLOBAL_CONFIG.disable_ssl = self.disable_ssl
-
-                if 'enable_update_proxy' in settings:
-                    self.enable_update_proxy = settings['enable_update_proxy']
-                    self.enable_update_proxy_checkbox.setChecked(self.enable_update_proxy)
-                    from src.libs.constants import GLOBAL_CONFIG
-                    GLOBAL_CONFIG.enable_update_proxy = self.enable_update_proxy
 
                 if 'update_proxy_base_url' in settings:
                     self.update_proxy_base_url = settings['update_proxy_base_url']
@@ -809,7 +802,7 @@ class SettingsManagerMixin:
         # 项目地址
         primary_color = THEME_MANAGER.get_color("primary_color", "#0d6efd")
         project_url = QLabel(
-            f"项目地址: <a href='https://github.com/Be1k0/yuque_document_download/' style='color: {primary_color}; text-decoration: none;'>https://github.com/Be1k0/yuque_document_download/</a>")
+            f"项目地址: <a href='https://github.com/Be1k0/YuQue-BdT/' style='color: {primary_color}; text-decoration: none;'>https://github.com/Be1k0/YuQue-BdT/</a>")
         project_url.setOpenExternalLinks(True)
         project_url.setWordWrap(False)
         project_url.setFont(QFont("", 14))
@@ -828,7 +821,7 @@ class SettingsManagerMixin:
         description_title.setStyleSheet("color: @text_color;")
         info_layout.addWidget(description_title)
 
-        description_text = QLabel("一款针对语雀知识库的批量导出工具，支持一键导出账号内所有知识库中的文档，也支持导出别人公开的知识库。")
+        description_text = QLabel("YuQue-BdT 是一款针对语雀开发的知识库批量导出 GUI 工具，采用Python开发，支持一键导出个人账号下全部知识库文档，同时也可下载他人公开的语雀知识库。")
         description_text.setWordWrap(True)
         description_text.setFont(QFont("", 14))
         description_text.setStyleSheet("color: @text_secondary; padding: 5px 0;")

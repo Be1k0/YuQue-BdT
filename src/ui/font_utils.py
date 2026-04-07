@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication, QComboBox
 

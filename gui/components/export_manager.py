@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 import os
 from PyQt6.QtWidgets import QMessageBox, QFileDialog, QTabWidget
 from PyQt6.QtCore import Qt

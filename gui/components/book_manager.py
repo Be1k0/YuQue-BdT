@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 from qasync import asyncSlot
 from PyQt6.QtWidgets import QMessageBox, QListWidgetItem, QTreeWidgetItem
 from PyQt6.QtCore import Qt

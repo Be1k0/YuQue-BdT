@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 import aiohttp
 from typing import Dict, Any, List, Optional
 from ..libs.constants import GLOBAL_CONFIG

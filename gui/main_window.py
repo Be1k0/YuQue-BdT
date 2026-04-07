@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout,
@@ -25,7 +30,7 @@ class YuqueGUI(QMainWindow, LoginManagerMixin, BookManagerMixin, ArticleManagerM
     def __init__(self):
         super().__init__()
         from main import __version__
-        self.setWindowTitle(f"语雀知识库导出工具 {__version__} By Be1k0")
+        self.setWindowTitle(f"YuQue-BdT {__version__} By Be1k0")
 
         # 响应式窗口大小设置
         screen = QApplication.primaryScreen().geometry()
@@ -62,7 +67,7 @@ class YuqueGUI(QMainWindow, LoginManagerMixin, BookManagerMixin, ArticleManagerM
         self.setMinimumSize(min_width, min_height)
 
         # 设置应用程序图标
-        self.setWindowIcon(QIcon(static_resource_path('favicon.ico')))
+        self.setWindowIcon(QIcon(static_resource_path('logo.ico')))
 
         # 初始化设置变量
         self.download_threads = 10  # 默认下载线程数

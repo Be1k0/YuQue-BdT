@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 class YuqueExportError(Exception):
     """语雀导出工具基础异常
     

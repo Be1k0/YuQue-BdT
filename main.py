@@ -1,4 +1,9 @@
-__version__ = "v2.1.1"
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
+__version__ = "v2.2.0"
 
 import sys
 import os

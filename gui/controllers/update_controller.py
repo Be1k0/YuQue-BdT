@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 from PyQt6.QtCore import pyqtSignal
 
 from gui.controllers.base_controller import BaseController

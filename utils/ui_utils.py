@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 import sys
 from io import StringIO
 from PyQt6.QtCore import Qt, pyqtSignal, QMetaObject, Q_ARG, QObject, QSize, QRect, QPoint

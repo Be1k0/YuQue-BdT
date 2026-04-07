@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 from PyQt6.QtCore import pyqtSignal
 from src.core.yuque import YuqueClient
 from src.core.web_login import SystemBrowserLoginBridge

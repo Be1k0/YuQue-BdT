@@ -1,3 +1,8 @@
+'''
+Author: Be1k0
+URL: https://github.com/Be1k0/YuQue-BdT
+'''
+
 
 from typing import List, Optional
 from gui.controllers.base_controller import BaseController

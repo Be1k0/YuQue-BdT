@@ -236,7 +236,7 @@ python bulid.py
 
 ---
 
-![](https://api.star-history.com/svg?repos=be1k0%2Fyuque_document_download)
+![](https://api.star-history.com/svg?repos=be1k0%2FYuQue-BdT)
 
 如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！
 

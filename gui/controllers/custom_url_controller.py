@@ -11,7 +11,15 @@ from src.core.scheduler import Scheduler
 from src.core.parsers import YuqueParser
 from src.libs.request import Request
 from src.libs.file import File
-from src.libs.tools import format_filename, ensure_dir_exists, save_cookies
+from src.libs.markdown_asset_localizer import MarkdownAssetLocalizer
+from src.libs.tools import (
+    format_filename,
+    ensure_dir_exists,
+    save_cookies,
+    get_local_cookies,
+    has_login_cookie,
+    merge_cookie_strings,
+)
 from src.libs.log import Log
 from gui.controllers.base_controller import BaseController
 
@@ -47,6 +55,10 @@ class CustomUrlController(BaseController):
         self._downloaded_count = 0
         self._skipped_count = 0
         self._failed_count = 0
+        self._localized_asset_count = 0
+        self._asset_failed_count = 0
+        self._asset_unsupported_count = 0
+        self._asset_login_required_count = 0
 
     async def start_parse(self, url: str, password: str = ""):
         """开始解析流程
@@ -328,6 +340,7 @@ class CustomUrlController(BaseController):
             # 从解析结果中提取文档列表
             if book_data and "book" in book_data and "toc" in book_data["book"]:
                 toc = book_data["book"]["toc"]
+                book_id = book_data["book"].get("id")
                 
                 for item in toc:
                     # 提取文档slug
@@ -352,12 +365,12 @@ class CustomUrlController(BaseController):
                         "parent_uuid": item.get("parent_uuid", ""),
                         "level": item.get("level", 0),
                         "namespace": namespace,
+                        "book_id": book_id,
                         "_cookies": cookies
                     }
                     doc_list.append(doc)
                 
                 # 获取文档真实类型
-                book_id = book_data["book"].get("id")
                 if book_id:
                     try:
                         import json
@@ -415,17 +428,23 @@ class CustomUrlController(BaseController):
             options: 导出选项字典
                 - skip: 是否跳过已存在的文件
                 - linebreak: 是否保留换行标识
-                - download_images: 是否下载图片
+                - download_images: 是否处理文档中的资源
         """
         options = options or {}
         skip_existing = options.get("skip", True)
         linebreak = options.get("linebreak", True)
         download_images = options.get("download_images", True)
+        login_cookie_string = get_local_cookies()
+        login_ready = has_login_cookie(login_cookie_string)
         
         # 重置统计计数器
         self._downloaded_count = 0
         self._skipped_count = 0
         self._failed_count = 0
+        self._localized_asset_count = 0
+        self._asset_failed_count = 0
+        self._asset_unsupported_count = 0
+        self._asset_login_required_count = 0
 
         self.download_started.emit()
         self.log_info(f"开始下载 {len(docs)} 篇文档到 {output_dir}")
@@ -447,12 +466,6 @@ class CustomUrlController(BaseController):
                         'parent_uuid': doc.get('parent_uuid', '')
                     }
 
-            # 准备图片下载器
-            image_downloader = None
-            if download_images:
-                from src.libs.threaded_image_downloader import ThreadedImageDownloader
-                image_downloader = ThreadedImageDownloader(max_workers=10, progress_callback=None)
-
             # 使用 YuqueClient 下载文档内容
             if self._temp_cookies is not None:
                 if self._temp_cookies:
@@ -464,19 +477,50 @@ class CustomUrlController(BaseController):
                 cookies_str = "; ".join(
                     [f"{name}={value}" for name, value in self._temp_cookies.items() if str(name).strip()]
                 )
+                asset_cookie_string = merge_cookie_strings(cookies_str, login_cookie_string)
+                if download_images:
+                    if login_ready:
+                        self.log_info("资源离线化将使用公开知识库Cookie与本地登录Cookie的合并结果")
+                    else:
+                        self.log_info("当前未登录，公开知识库中的非图片文件将保留远程链接")
                 
                 async with YuqueClient() as client:
-                    await self._download_docs_with_custom_cookies(client, docs, output_dir, skip_existing, linebreak, download_images, image_downloader, cookies_str, level_map, options)
+                    await self._download_docs_with_custom_cookies(
+                        client,
+                        docs,
+                        output_dir,
+                        skip_existing,
+                        linebreak,
+                        download_images,
+                        cookies_str,
+                        asset_cookie_string,
+                        login_ready,
+                        level_map,
+                        options,
+                    )
             else:
+                if download_images and not login_ready:
+                    self.log_info("当前未登录，公开知识库中的非图片文件将保留远程链接")
                 async with YuqueClient() as client:
-                    await self._download_docs_with_client(client, docs, output_dir, skip_existing, linebreak, download_images, image_downloader, level_map, options)
+                    await self._download_docs_with_client(
+                        client,
+                        docs,
+                        output_dir,
+                        skip_existing,
+                        linebreak,
+                        download_images,
+                        login_cookie_string,
+                        login_ready,
+                        level_map,
+                        options,
+                    )
 
         except Exception as e:
             self.log_error(f"下载过程出错: {str(e)}")
             self.download_progress.emit(f"下载过程出错: {str(e)}")
             self.download_finished.emit()
     
-    async def _download_docs_with_client(self, client, docs, output_dir, skip_existing, linebreak, download_images, image_downloader, level_map, options=None):
+    async def _download_docs_with_client(self, client, docs, output_dir, skip_existing, linebreak, download_images, asset_cookie_string, login_ready, level_map, options=None):
         """使用指定的client下载文档
         
         Args:
@@ -485,8 +529,9 @@ class CustomUrlController(BaseController):
             output_dir: 输出目录
             skip_existing: 是否跳过已存在的文件
             linebreak: 是否保留换行标识
-            download_images: 是否下载图片
-            image_downloader: 图片下载器实例
+            download_images: 是否处理文档中的资源
+            asset_cookie_string: 资源离线化使用的 Cookie
+            login_ready: 是否具备可用登录态
             level_map: 层级映射表
             options: 导出选项
         """
@@ -581,16 +626,10 @@ class CustomUrlController(BaseController):
                     self.log_success(f"已保存: {title}")
                     self._downloaded_count += 1  # 更新成功计数
                     
-                    # 下载图片 (仅Markdown支持)
-                    if download_images and image_downloader and ext == '.md':
-                        self.download_progress.emit(f"正在处理图片 ({i}/{total}): {title}")
-                        await asyncio.to_thread(
-                            image_downloader.process_single_file,
-                            md_file_path=file_path,
-                            image_url_prefix='',
-                            image_rename_mode='asc'
-                        )
-                    
+                    if download_images and ext == '.md':
+                        self.download_progress.emit(f"正在处理文档资源 ({i}/{total}): {title}")
+                        await self._localize_markdown_assets(file_path, doc, asset_cookie_string, login_ready)
+                     
                     self.download_progress.emit(f"完成 ({i}/{total}): {title}")
                 else:
                     self.log_error(f"导出失败: {title}")
@@ -611,7 +650,7 @@ class CustomUrlController(BaseController):
         # 发送统计信息
         self._emit_download_stats()
     
-    async def _download_docs_with_custom_cookies(self, client, docs, output_dir, skip_existing, linebreak, download_images, image_downloader, cookies_str, level_map, options=None):
+    async def _download_docs_with_custom_cookies(self, client, docs, output_dir, skip_existing, linebreak, download_images, cookies_str, asset_cookie_string, login_ready, level_map, options=None):
         """使用自定义Cookie字符串下载文档
         
         Args:
@@ -620,9 +659,10 @@ class CustomUrlController(BaseController):
             output_dir: 输出目录
             skip_existing: 是否跳过已存在的文件
             linebreak: 是否保留换行标识
-            download_images: 是否下载图片
-            image_downloader: 图片下载器实例
+            download_images: 是否处理文档中的资源
             cookies_str: 自定义Cookie字符串
+            asset_cookie_string: 资源离线化使用的 Cookie
+            login_ready: 是否具备可用登录态
             level_map: 层级映射表
             options: 导出选项
         """
@@ -717,16 +757,10 @@ class CustomUrlController(BaseController):
                     self.log_success(f"已保存: {title}")
                     self._downloaded_count += 1  # 更新成功计数
                     
-                    # 下载图片
-                    if download_images and image_downloader and ext == '.md':
-                        self.download_progress.emit(f"正在处理图片 ({i}/{total}): {title}")
-                        await asyncio.to_thread(
-                            image_downloader.process_single_file,
-                            md_file_path=file_path,
-                            image_url_prefix='',
-                            image_rename_mode='asc'
-                        )
-                    
+                    if download_images and ext == '.md':
+                        self.download_progress.emit(f"正在处理文档资源 ({i}/{total}): {title}")
+                        await self._localize_markdown_assets(file_path, doc, asset_cookie_string, login_ready)
+                     
                     self.download_progress.emit(f"完成 ({i}/{total}): {title}")
                 else:
                     self.log_error(f"导出失败: {title}")
@@ -747,9 +781,40 @@ class CustomUrlController(BaseController):
         # 发送统计信息
         self._emit_download_stats()
     
+    async def _localize_markdown_assets(self, file_path: str, doc: dict, asset_cookie_string: str, login_ready: bool):
+        localizer = MarkdownAssetLocalizer(
+            cookie_string=asset_cookie_string,
+            max_workers=10,
+            progress_callback=None,
+            image_rename_mode='asc',
+            image_file_prefix='image-',
+            yuque_cdn_domain='cdn.nlark.com',
+        )
+        stats = await asyncio.to_thread(
+            localizer.process_single_file,
+            md_file_path=file_path,
+            current_doc_meta={
+                "doc_id": doc.get("id", ""),
+                "doc_url": doc.get("url", "") or doc.get("slug", ""),
+                "slug": doc.get("slug", ""),
+                "book_id": doc.get("book_id", ""),
+                "namespace": doc.get("namespace", ""),
+                "title": doc.get("title", ""),
+            },
+            has_login_cookie=login_ready,
+        )
+        self._localized_asset_count += stats.localized_count
+        self._asset_failed_count += stats.failed_count
+        self._asset_unsupported_count += stats.unsupported_count
+        self._asset_login_required_count += stats.login_required_count
+
     def _emit_download_stats(self):
         """发送下载统计信息"""
-        stats_msg = f"下载完成!\n成功: {self._downloaded_count}\n跳过: {self._skipped_count}\n失败: {self._failed_count}"
+        stats_msg = (
+            f"下载完成!\n成功: {self._downloaded_count}\n跳过: {self._skipped_count}\n失败: {self._failed_count}"
+            f"\n资源离线化: {self._localized_asset_count}\n资源需登录: {self._asset_login_required_count}"
+            f"\n资源暂不支持: {self._asset_unsupported_count}\n资源失败: {self._asset_failed_count}"
+        )
         self.log_info(stats_msg.replace('\n', ', '))
         self.download_finished.emit()
 

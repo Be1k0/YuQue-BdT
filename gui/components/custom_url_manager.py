@@ -152,7 +152,7 @@ class CustomUrlManagerMixin:
         self.custom_keep_linebreak_checkbox.setStyleSheet(" padding: 2px 0;")
         checkbox_layout.addWidget(self.custom_keep_linebreak_checkbox)
 
-        self.custom_download_images_checkbox = QCheckBox("下载图片到本地")
+        self.custom_download_images_checkbox = QCheckBox("下载文档中的文件到本地")
         self.custom_download_images_checkbox.setChecked(True)
         self.custom_download_images_checkbox.setStyleSheet(" padding: 2px 0;")
         checkbox_layout.addWidget(self.custom_download_images_checkbox)
@@ -357,8 +357,21 @@ class CustomUrlManagerMixin:
         downloaded = self.custom_url_controller._downloaded_count
         skipped = self.custom_url_controller._skipped_count
         failed = self.custom_url_controller._failed_count
+        localized = self.custom_url_controller._localized_asset_count
+        login_required = self.custom_url_controller._asset_login_required_count
+        unsupported = self.custom_url_controller._asset_unsupported_count
+        asset_failed = self.custom_url_controller._asset_failed_count
         
-        msg = f"导出完成!\n成功下载: {downloaded}\n跳过文件: {skipped}\n失败文件: {failed}" + "\u00A0" * 25
+        msg = f"导出完成!\n成功下载: {downloaded}\n跳过文件: {skipped}\n失败文件: {failed}"
+        if self.custom_download_images_checkbox.isChecked():
+            msg += f"\n已离线保存资源数: {localized}"
+            if login_required:
+                msg += f"\n需登录后处理数: {login_required}"
+            if unsupported:
+                msg += f"\n暂不支持资源数: {unsupported}"
+            if asset_failed:
+                msg += f"\n资源处理失败数: {asset_failed}"
+        msg += "\u00A0" * 25
         QMessageBox.information(self, "导出完成", msg)
 
     def filter_custom_articles(self, text):

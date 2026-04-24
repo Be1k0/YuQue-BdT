@@ -388,8 +388,8 @@ class YuqueGUI(QMainWindow, LoginManagerMixin, BookManagerMixin, ArticleManagerM
         self.keep_linebreak_checkbox.setStyleSheet(" padding: 2px 0;")
         checkbox_layout.addWidget(self.keep_linebreak_checkbox)
 
-        self.download_images_checkbox = QCheckBox("下载图片到本地")
-        self.download_images_checkbox.setToolTip("将Markdown文档中的图片下载到本地，并更新图片链接")
+        self.download_images_checkbox = QCheckBox("下载文档中的文件到本地")
+        self.download_images_checkbox.setToolTip("将 Markdown 文档中的图片、附件和卡片媒体下载到本地，并更新链接")
         self.download_images_checkbox.setChecked(True)
         self.download_images_checkbox.setStyleSheet(" padding: 2px 0;")  
         checkbox_layout.addWidget(self.download_images_checkbox)

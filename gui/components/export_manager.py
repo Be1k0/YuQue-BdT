@@ -134,8 +134,9 @@ class ExportManagerMixin:
             self.progress_bar.setMaximum(total_articles if total_articles > 0 else 100) 
             self.progress_bar.setFormat(f"准备导出: {export_info}")
 
-            # 初始化下载图片总数
-            self._total_downloaded_images = 0
+            # 初始化资源处理统计
+            self._total_localized_assets = 0
+            self._asset_summary = {}
 
             # 禁用UI
             self._set_ui_enabled(False)
@@ -149,17 +150,19 @@ class ExportManagerMixin:
             self.progress_bar.setValue(self.progress_bar.maximum())
             self.progress_bar.setFormat("文档导出完成")
 
-            # 图片下载
+            # 文档资源离线化
             if self.download_images_checkbox.isChecked():
-                self.progress_bar.setFormat("正在准备下载图片...")
-                self.log_handler.emit_log("开始处理文章中的图片...")
-                
-                md_files = getattr(answer, 'downloaded_files', [])
+                self.progress_bar.setFormat("正在准备处理文档资源...")
+                self.log_handler.emit_log("开始处理 Markdown 文档中的文件链接...")
+                markdown_meta = getattr(answer, 'downloaded_markdown_meta', {})
+                md_files = list(markdown_meta.keys()) or [
+                    path for path in getattr(answer, 'downloaded_files', []) if str(path).lower().endswith('.md')
+                ]
                 
                 if md_files:
                     count = len(md_files)
-                    self.log_handler.emit_log(f"本次共导出 {count} 个Markdown文件，开始下载这些文件中的图片...")
-                    self.progress_bar.setFormat("正在下载图片...")
+                    self.log_handler.emit_log(f"本次共导出 {count} 个 Markdown 文件，开始离线保存文档中的文件...")
+                    self.progress_bar.setFormat("正在处理文档资源...")
                     
                     await self.export_controller.download_images(
                         md_files=md_files,
@@ -167,10 +170,11 @@ class ExportManagerMixin:
                         doc_image_prefix=self.doc_image_prefix,
                         image_rename_mode=self.image_rename_mode,
                         image_file_prefix=self.image_file_prefix,
-                        yuque_cdn_domain=self.yuque_cdn_domain
+                        yuque_cdn_domain=self.yuque_cdn_domain,
+                        markdown_meta=markdown_meta,
                     )
                 else:
-                    self.log_handler.emit_log("未找到Markdown文件，跳过图片下载")
+                    self.log_handler.emit_log("未找到 Markdown 文件，跳过文档资源处理")
 
             self._on_all_finished(answer)
 
@@ -195,13 +199,14 @@ class ExportManagerMixin:
         self.deselect_all_articles_btn.setEnabled(enabled)
 
     def _on_image_download_finished(self, processed_files, total_images):
-        """图片下载完成回调
+        """文档资源处理完成回调
         
         Args:
             processed_files: 已处理的Markdown文件数
-            total_images: 下载的图片总数
+            total_images: 已离线保存的资源总数
         """
-        self._total_downloaded_images = total_images
+        self._total_localized_assets = total_images
+        self._asset_summary = getattr(self.export_controller, 'last_asset_summary', {})
 
     def _on_all_finished(self, answer):
         """所有任务完成
@@ -225,26 +230,37 @@ class ExportManagerMixin:
             msg += f"\n失败文档数：{failed_count}"
             
         if self.download_images_checkbox.isChecked():
-            msg += f"\n图片下载数: {self._total_downloaded_images}"
+            localized = getattr(self, '_total_localized_assets', 0)
+            summary = getattr(self, '_asset_summary', {})
+            msg += f"\n已离线保存资源数: {localized}"
+            if summary.get("login_required"):
+                msg += f"\n需登录后处理数: {summary['login_required']}"
+            if summary.get("unsupported"):
+                msg += f"\n暂不支持资源数: {summary['unsupported']}"
+            if summary.get("failed"):
+                msg += f"\n资源处理失败数: {summary['failed']}"
             
-        self.log_handler.emit_log(f"任务完成! 下载: {downloaded}, 跳过: {skipped}, 失败: {failed_count}, 图片: {self._total_downloaded_images}")
+        self.log_handler.emit_log(
+            f"任务完成! 下载: {downloaded}, 跳过: {skipped}, 失败: {failed_count}, "
+            f"资源离线化: {getattr(self, '_total_localized_assets', 0)}"
+        )
         msg += "\u00A0" * 25
         QMessageBox.information(self, "导出完成", msg)
 
     def _on_image_download_progress(self, downloaded, total, current_filename):
-        """图片下载进度更新回调
+        """文档资源处理进度更新回调
         
         Args:
-            downloaded: 已下载的图片数
-            total: 总图片数
-            current_filename: 当前下载的图片文件名
+            downloaded: 已处理的资源数
+            total: 总资源数
+            current_filename: 当前处理的 Markdown 文件名
         """
         if total > 0:
             progress = int((downloaded / total) * 100)
             self.progress_bar.setValue(downloaded)
             self.progress_bar.setMaximum(total)
             article_name = current_filename.replace('.md', '') if current_filename.endswith('.md') else current_filename
-            self.progress_bar.setFormat(f"文章：{article_name} 正在下载图片 （{downloaded}/{total}）{progress}%")
+            self.progress_bar.setFormat(f"文章：{article_name} 正在处理文档资源（{downloaded}/{total}）{progress}%")
 
     def _on_export_progress(self, message):
         """导出进度回调

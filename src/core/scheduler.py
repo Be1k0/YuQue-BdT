@@ -90,6 +90,11 @@ class Scheduler:
             return
 
         Log.info(f"知识库命名空间: {namespace}")
+        book_id = 0
+        try:
+            book_id = int(getattr(book, "id", 0) or 0)
+        except (TypeError, ValueError):
+            book_id = 0
 
         # 获取知识库的文档列表
         docs = await self.client.get_book_docs(namespace)
@@ -127,7 +132,7 @@ class Scheduler:
         async def semaphore_download(idx, doc):
             async with semaphore:
                 await self._process_doc_download(
-                    idx, len(filtered_docs), doc, namespace, book_dir, answer, level_map, book_completed_count
+                    idx, len(filtered_docs), doc, namespace, book_dir, answer, level_map, book_completed_count, book_id
                 )
 
         tasks = [semaphore_download(i, doc) for i, doc in enumerate(filtered_docs, 1)]
@@ -138,7 +143,7 @@ class Scheduler:
         Log.success(f"知识库 {book.name} 下载完成")
 
     @ErrorHandler.async_error_handler("处理文档下载", reraise=False)
-    async def _process_doc_download(self, index, total, doc, namespace, book_dir, answer, level_map, book_completed_count):
+    async def _process_doc_download(self, index, total, doc, namespace, book_dir, answer, level_map, book_completed_count, book_id):
         """处理单个文档下载逻辑
         
         Args:
@@ -218,7 +223,7 @@ class Scheduler:
 
         Log.info(f"开始文档 ({index}/{total}): {doc_title}")
 
-        success = await self._download_doc(namespace, doc, book_dir, answer, level_map)
+        success = await self._download_doc(namespace, doc, book_dir, answer, level_map, book_id)
         
         if success:
             answer.downloaded_count.increment()
@@ -235,7 +240,7 @@ class Scheduler:
         
 
     @ErrorHandler.async_error_handler("下载文档IO", reraise=True)
-    async def _download_doc(self, namespace: str, doc: Dict[str, Any], book_dir: str, answer: MutualAnswer, level_map: Dict[str, Dict]) -> bool:
+    async def _download_doc(self, namespace: str, doc: Dict[str, Any], book_dir: str, answer: MutualAnswer, level_map: Dict[str, Dict], book_id: int) -> bool:
         """下载单个文档的具体实现
         
         Args:
@@ -315,8 +320,16 @@ class Scheduler:
         f = File()
         f.write(file_path, markdown_content)
 
-        # 记录已下载或更新的文件，给后续图片下载定界使用
+        # 记录已下载或更新的文件，给后续文档资源离线化定界使用
         answer.downloaded_files.append(file_path)
+        answer.downloaded_markdown_meta[file_path] = {
+            "doc_id": doc.get("id", ""),
+            "doc_url": doc.get("url", "") or doc.get("slug", ""),
+            "slug": doc.get("slug", ""),
+            "book_id": doc.get("book_id", "") or book_id,
+            "namespace": namespace,
+            "title": doc_title,
+        }
 
         rel_path = os.path.relpath(file_path, book_dir)
         Log.success(f"保存成功: {rel_path}")

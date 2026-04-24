@@ -277,9 +277,9 @@ class YuqueClient:
                     doc_list.append(doc)
                 
                 # 请求获取额外 type信息
+                book_id = None
                 try:
                     books_info = get_cache_books_info()
-                    book_id = None
                     if books_info:
                         for b in books_info:
                             b_namespace = resolve_book_namespace(b)
@@ -318,7 +318,11 @@ class YuqueClient:
 
                 except Exception as e:
                     Log.warn(f"获取知识库文档真实类型失败: {str(e)}")
-                        
+
+                if book_id:
+                    for doc in doc_list:
+                        doc["book_id"] = book_id
+                         
                 return doc_list
 
 

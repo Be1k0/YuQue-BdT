@@ -137,6 +137,7 @@ class MutualAnswer:
 
     # 记录当前任务中被成功下载或覆写的文档绝对路径
     downloaded_files: List[str] = field(default_factory=list)
+    downloaded_markdown_meta: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass

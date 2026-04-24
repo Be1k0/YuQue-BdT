@@ -89,15 +89,15 @@ class SettingsManagerMixin:
         theme_group.setLayout(theme_layout)
         settings_layout.addWidget(theme_group)
 
-        # 图片设置组
-        image_group = QGroupBox("图片设置")
+        # 资源设置组
+        image_group = QGroupBox("资源设置")
         image_layout = QVBoxLayout()
         image_layout.setContentsMargins(10, 15, 10, 15)
         image_layout.setSpacing(15)
 
         # 下载线程数设置
         threads_layout = QHBoxLayout()
-        threads_label = QLabel("图片下载线程数:")
+        threads_label = QLabel("资源下载线程数:")
         threads_label.setMinimumWidth(100)
         self.threads_input = QLineEdit(str(self.download_threads))
         self.threads_input.setValidator(QIntValidator(1, 50))
@@ -162,7 +162,7 @@ class SettingsManagerMixin:
         self.cdn_input = QLineEdit(self.yuque_cdn_domain)
         self.cdn_input.setMaximumWidth(200)
         self.cdn_input.textChanged.connect(self.auto_save_settings)
-        cdn_help = QLabel("(语雀图片CDN域名)")
+        cdn_help = QLabel("(用于识别语雀图片资源链接)")
         cdn_help.setStyleSheet("color: #6c757d; font-size: 12px;")
         cdn_layout.addWidget(cdn_label)
         cdn_layout.addWidget(self.cdn_input)
@@ -277,7 +277,7 @@ class SettingsManagerMixin:
                 if 1 <= threads <= 50:
                     self.download_threads = threads
                 else:
-                    QMessageBox.warning(self, "输入错误", "图片下载线程数只能在1-50之间！")
+                    QMessageBox.warning(self, "输入错误", "资源下载线程数只能在1-50之间！")
                     self.threads_input.setText(str(self.download_threads))
                     return  
 
@@ -310,7 +310,7 @@ class SettingsManagerMixin:
             self.update_proxy_base_url = new_update_proxy_base_url
 
         except ValueError:
-            QMessageBox.warning(self, "输入错误", "图片下载线程数只能是1-50之间的数字！")
+            QMessageBox.warning(self, "输入错误", "资源下载线程数只能是1-50之间的数字！")
             self.threads_input.setText(str(self.download_threads))
 
     def save_settings(self):

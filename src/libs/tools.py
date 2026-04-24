@@ -49,6 +49,54 @@ def sanitize_cookie_string(cookie_string: str) -> str:
     return "; ".join(ordered_cookie_items)
 
 
+def parse_cookie_string(cookie_string: str) -> dict[str, str]:
+    """将 Cookie 字符串解析为字典"""
+    cookie_map: dict[str, str] = {}
+    if not cookie_string:
+        return cookie_map
+
+    for raw_item in cookie_string.split(";"):
+        item = raw_item.strip()
+        if not item or "=" not in item:
+            continue
+
+        name, value = item.split("=", 1)
+        name = name.strip()
+        value = value.strip()
+        if not name:
+            continue
+
+        cookie_map[name] = value
+
+    return cookie_map
+
+
+def build_cookie_string(cookie_map: dict[str, str]) -> str:
+    """将 Cookie 字典拼接为字符串"""
+    if not cookie_map:
+        return ""
+    return "; ".join(
+        f"{name}={value}"
+        for name, value in cookie_map.items()
+        if str(name).strip()
+    )
+
+
+def merge_cookie_strings(*cookie_strings: str) -> str:
+    """合并多个 Cookie 字符串，后者同名字段覆盖前者"""
+    merged: dict[str, str] = {}
+    for cookie_string in cookie_strings:
+        for name, value in parse_cookie_string(cookie_string).items():
+            merged[name] = value
+    return build_cookie_string(merged)
+
+
+def has_login_cookie(cookie_string: str) -> bool:
+    """判断 Cookie 中是否包含登录态关键字段"""
+    cookie_map = parse_cookie_string(cookie_string)
+    return bool(cookie_map.get("_yuque_session") and cookie_map.get("yuque_ctoken"))
+
+
 def get_local_cookies() -> str:
     """获取本地有效cookies，如果cookies过期就返回空字符串"""
     f = File()

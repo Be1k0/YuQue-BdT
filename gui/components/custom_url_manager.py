@@ -91,22 +91,32 @@ class CustomUrlManagerMixin:
         self.custom_article_list = ArticleTreeWidget()
         left_layout.addWidget(self.custom_article_list)
 
-        # 操作按钮 (水平布局)
-        action_control_layout = QHBoxLayout()
+        # 操作按钮
+        action_control_layout = QVBoxLayout()
+        action_control_layout.setSpacing(8)
+
+        action_buttons_layout = QHBoxLayout()
+        action_buttons_layout.setSpacing(8)
         self.cust_select_all_btn = QPushButton("全选")
-        self.cust_select_all_btn.setMinimumWidth(300)
+        self.cust_select_all_btn.setMinimumHeight(30)
+        self.cust_select_all_btn.setMaximumHeight(34)
         self.cust_select_all_btn.clicked.connect(self.select_all_custom_articles)
-        action_control_layout.addWidget(self.cust_select_all_btn)
+        action_buttons_layout.addWidget(self.cust_select_all_btn)
 
         self.cust_deselect_all_btn = QPushButton("取消选择")
-        self.cust_deselect_all_btn.setMinimumWidth(300)
+        self.cust_deselect_all_btn.setMinimumHeight(30)
+        self.cust_deselect_all_btn.setMaximumHeight(34)
         self.cust_deselect_all_btn.setObjectName("SecondaryButton")
         self.cust_deselect_all_btn.clicked.connect(self.deselect_all_custom_articles)
-        action_control_layout.addWidget(self.cust_deselect_all_btn)
-        
-        action_control_layout.addStretch(1)
+        action_buttons_layout.addWidget(self.cust_deselect_all_btn)
+
+        action_control_layout.addLayout(action_buttons_layout)
+
+        count_layout = QHBoxLayout()
         self.custom_selected_count_label = QLabel("已选: 0")
-        action_control_layout.addWidget(self.custom_selected_count_label)
+        self.custom_selected_count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        count_layout.addWidget(self.custom_selected_count_label)
+        action_control_layout.addLayout(count_layout)
         left_layout.addLayout(action_control_layout)
 
         content_layout.addWidget(left_panel, 2)
